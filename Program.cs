@@ -1,9 +1,33 @@
+using System;
+using System.Text;
+using System.Threading.Tasks;
+using OllamaSharp;
+
 namespace Kin;
 
 public static class Program
 {
-    public static void Main()
+    public async static Task Main()
     {
-        Console.WriteLine("Start");
+        // var recorder = new Recorder.Recorder();
+        var speech = new Speech.Speech();
+
+        var uri = new Uri("http://localhost:11434");
+        var ollama = new OllamaApiClient(uri);
+        ollama.SelectedModel = "kin";
+
+        // await recorder.Record("mic.wav");
+        var prompt = await speech.Transcribe("mic.wav");
+
+        StringBuilder answer = new StringBuilder();
+
+        await foreach (var stream in ollama.GenerateAsync(prompt))
+        {
+            Console.Clear();
+            Console.WriteLine(answer.ToString());
+            answer.Append(stream.Response);
+        }
+
+        await speech.Synthesize(answer.ToString());
     }
 }
