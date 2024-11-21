@@ -1,0 +1,15 @@
+{
+    "name": "client",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "dev": "live-server ."
+    },
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "@microsoft/signalr": "^8.0.7",
+        "live-server": "^1.2.2"
+    }
+}
