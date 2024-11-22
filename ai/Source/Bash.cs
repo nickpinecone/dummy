@@ -29,7 +29,7 @@ public class Bash
                 FileName = "/bin/bash",
                 Arguments = $"-c \"{escaped}\"",
                 RedirectStandardOutput = true,
-                RedirectStandardInput = true,
+                RedirectStandardInput = false,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             }

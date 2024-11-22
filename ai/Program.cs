@@ -37,7 +37,7 @@ public static class Program
 
         var task = app.RunAsync();
 
-        // var recorder = new Recorder.Recorder();
+        var recorder = new Recorder();
         var speech = new Speech();
 
         var uri = new Uri("http://localhost:11434");
@@ -50,7 +50,7 @@ public static class Program
             Console.ReadKey();
 
             await _hub.Clients.All.SendAsync("Recording");
-            // await recorder.Record("mic.wav");
+            await recorder.Record("mic.wav");
             var prompt = await speech.Transcribe("mic.wav");
 
             await _hub.Clients.All.SendAsync("Thinking");
