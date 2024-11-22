@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Kin.Bash;
+namespace Dumb;
 
 public class Bash
 {

@@ -3,14 +3,14 @@ using System.Text;
 using System.Threading.Tasks;
 using OllamaSharp;
 
-namespace Kin;
+namespace Dumb;
 
 public static class Program
 {
     public async static Task Main()
     {
         // var recorder = new Recorder.Recorder();
-        var speech = new Speech.Speech();
+        var speech = new Speech();
 
         var uri = new Uri("http://localhost:11434");
         var ollama = new OllamaApiClient(uri);

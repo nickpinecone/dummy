@@ -1,4 +1,4 @@
-# Kin
+# Dumb
 Pretty stupid AI chat bot made for fun
 
 ## Tools
