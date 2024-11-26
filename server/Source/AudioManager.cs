@@ -19,7 +19,8 @@ public class AudioManager
 
     public AudioManager()
     {
-        OpenAI = new OpenAIClient(new ApiKeyCredential("test"), new OpenAIClientOptions() {
+        OpenAI = new OpenAIClient(new ApiKeyCredential("test"), new OpenAIClientOptions()
+        {
             Endpoint = new Uri("http://localhost:8080/v1/"),
         });
 
@@ -55,7 +56,8 @@ public class AudioManager
 
     public async Task TextToSpeech(string text, string filename)
     {
-        var options = new SpeechGenerationOptions() {
+        var options = new SpeechGenerationOptions()
+        {
             ResponseFormat = GeneratedSpeechFormat.Wav,
         };
 
@@ -64,5 +66,8 @@ public class AudioManager
         var path = OutputPath(filename);
         BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create));
         writer.Write(data.Value.ToArray());
+
+        writer.Close();
+        await writer.DisposeAsync();
     }
 }

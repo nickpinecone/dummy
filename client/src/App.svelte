@@ -1,50 +1,102 @@
 <script>
     import * as signalR from "@microsoft/signalr";
+    import { onMount } from "svelte";
 
     let hub = new signalR.HubConnectionBuilder()
-        .withUrl("http://localhost:8090/signal", {
+        .withUrl("http://localhost:8085/signal", {
             transport: signalR.HttpTransportType.ServerSentEvents,
             withCredentials: false,
         })
         .build();
 
-    hub.on("Recording", () => {
-        status.innerText = "Слушает";
-        image.src = "./listening.jpg";
+    const State = {
+        Record: 1,
+        Generate: 2,
+        Ready: 3,
+        Speak: 4,
+        Pause: 5,
+        Wait: 6,
+    };
+
+    let state = State.Wait;
+    let status;
+    let answerElement;
+    let answer;
+    let image;
+
+    onMount(() => {
+        wait();
     });
 
-    hub.on("Thinking", () => {
-        status.innerText = "Думает...";
-        image.src = "./thinking.jpg";
-    });
+    function wait() {
+        state = State.Wait;
+        status.innerText = "Ждет вопроса";
+        answerElement.innerText = "";
+        image.src = "./wait.jpg";
+    }
 
-    hub.on("Ready", () => {
+    async function post(url) {
+        await fetch("http://localhost:8085" + url, {
+            method: "Post",
+        });
+    }
+
+    async function handleKeyPress(event) {
+        if (state == State.Speak && event.code == "KeyQ") {
+            await post("/stop");
+            wait();
+        }
+        if (event.code != "Space") {
+            return;
+        }
+
+        if (state == State.Wait) {
+            await post("/record");
+            state = State.Record;
+
+            status.innerText = "Слушает";
+            image.src = "./record.jpg";
+        } else if (state == State.Record) {
+            post("/generate");
+            state = State.Generate;
+
+            status.innerText = "Думает...";
+            image.src = "./generate.jpg";
+        } else if (state == State.Ready) {
+            await post("/speak");
+            state = State.Speak;
+
+            status.innerText = "Говорит";
+            answerElement.innerText = answer;
+            image.src = "./speak.jpg";
+        } else if (state == State.Speak) {
+            await post("/pause");
+            state = State.Pause;
+        } else if (state == State.Pause) {
+            await post("/speak");
+            state = State.Speak;
+        }
+    }
+
+    hub.on("Ready", (result) => {
+        state = State.Ready;
         status.innerText = "Готов!";
         image.src = "./ready.jpg";
+        answer = result;
     });
 
-    hub.on("Speaking", (result) => {
-        status.innerText = "Говорит";
-        answer.innerText = result;
-        image.src = "./speaking.jpg";
-    });
-
-    hub.on("Done", () => {
-        status.innerText = "Ждет вопроса";
-        answer.innerText = "";
-        image.src = "./waiting.jpg";
+    hub.on("Wait", () => {
+        wait();
     });
 
     hub.start();
-
-    let status;
-    let answer;
-    let image;
 </script>
+
+<svelte:document on:keypress={handleKeyPress} />
 
 <main>
     <h1 bind:this={status}></h1>
-    <div bind:this={answer}></div>
+    <div bind:this={answerElement}></div>
     <img bind:this={image} src="" alt="" />
 </main>
 
