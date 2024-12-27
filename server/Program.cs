@@ -7,13 +7,13 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
 
-namespace Dumb;
+namespace Dummy;
 
 public static class Program
 {
     private static AudioManager _audioManager = new AudioManager();
     private static OllamaApiClient _aiManager = AIManager.CreateOllama();
-    private static IHubContext<SignalHub> _hub = null;
+    private static IHubContext<SignalHub>? _hub = null;
 
     public static void Main(string[] args)
     {
@@ -48,26 +48,26 @@ public static class Program
         app.Run();
     }
 
-    public static async Task Record()
+    public static void Record()
     {
-        await _audioManager.RecordFile("mic.wav");
+        _audioManager.RecordFile("mic.wav");
     }
 
     public static async Task Generate()
     {
-        await _audioManager.Recorder.Stop();
+        _audioManager.Recorder.Stop();
 
         var text = await _audioManager.SpeechToText("mic.wav");
 
         var answer = new StringBuilder();
         await foreach (var stream in _aiManager.GenerateAsync(text.Value.Text))
         {
-            answer.Append(stream.Response);
+            answer.Append(stream?.Response);
         }
 
         await _audioManager.TextToSpeech(answer.ToString(), "out.wav");
 
-        await _hub.Clients.All.SendAsync("Ready", answer.ToString());
+        await _hub!.Clients.All.SendAsync("Ready", answer.ToString());
     }
 
     public static async Task Speak()
@@ -78,7 +78,7 @@ public static class Program
         }
         else
         {
-            await _audioManager.PlayFile("out.wav");
+            _audioManager.PlayFile("out.wav");
         }
     }
 
@@ -87,14 +87,14 @@ public static class Program
         await _audioManager.Player.Pause();
     }
 
-    public static async Task Stop()
+    public static void Stop()
     {
-        await _audioManager.Player.Stop();
+        _audioManager.Player.Stop();
     }
 
-    private static void HandlePlaybackFinished(object sender, EventArgs args)
+    private static void HandlePlaybackFinished(object? sender, EventArgs args)
     {
-        _hub.Clients.All.SendAsync("Wait");
+        _hub?.Clients.All.SendAsync("Wait");
     }
 }
 

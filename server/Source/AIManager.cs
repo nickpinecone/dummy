@@ -1,7 +1,7 @@
 using System;
 using OllamaSharp;
 
-namespace Dumb;
+namespace Dummy;
 
 public class AIManager
 {

@@ -2,12 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>Enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NetCoreAudio" Version="2.0.0" />
+    <PackageReference Include="NickPinecone.FFAudio" Version="0.1.1.1" />
     <PackageReference Include="OllamaSharp" Version="4.0.8" />
     <PackageReference Include="OpenAI" Version="2.0.0" />
   </ItemGroup>

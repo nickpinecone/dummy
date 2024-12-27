@@ -2,11 +2,11 @@ using System;
 using System.ClientModel;
 using System.IO;
 using System.Threading.Tasks;
-using NetCoreAudio;
+using FFAudio;
 using OpenAI;
 using OpenAI.Audio;
 
-namespace Dumb;
+namespace Dummy;
 
 public class AudioManager
 {
@@ -14,8 +14,8 @@ public class AudioManager
     public AudioClient Whisper { get; private set; }
     public AudioClient Piper { get; private set; }
 
-    public Player Player { get; private set; }
-    public Recorder Recorder { get; private set; }
+    public FFPlayer Player { get; private set; }
+    public FFRecorder Recorder { get; private set; }
 
     public AudioManager()
     {
@@ -27,8 +27,8 @@ public class AudioManager
         Whisper = OpenAI.GetAudioClient("whisper-small-ru");
         Piper = OpenAI.GetAudioClient("ruslan.onnx");
 
-        Player = new Player();
-        Recorder = new Recorder();
+        Player = new FFPlayer("ffplay");
+        Recorder = new FFRecorder("ffmpeg", "pulse");
     }
 
     private string OutputPath(string filename)
@@ -36,14 +36,14 @@ public class AudioManager
         return Path.Combine(Directory.GetCurrentDirectory(), "output", filename);
     }
 
-    public async Task PlayFile(string filename)
+    public void PlayFile(string filename)
     {
-        await Player.Play(OutputPath(filename));
+        Player.Play(OutputPath(filename));
     }
 
-    public async Task RecordFile(string filename)
+    public void RecordFile(string filename)
     {
-        await Recorder.Record(OutputPath(filename));
+        Recorder.Record(OutputPath(filename));
     }
 
     public async Task<ClientResult<AudioTranscription>> SpeechToText(string filename)
