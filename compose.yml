@@ -3,9 +3,9 @@ services:
     image: localai/localai:latest-cpu
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/readyz" ]
-      interval: 1m
-      timeout: 20m
-      retries: 5
+      interval: 10s
+      timeout: 30s
+      retries: 10
     ports:
       - 8080:8080
     environment:
