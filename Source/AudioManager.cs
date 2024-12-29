@@ -19,8 +19,7 @@ public class AudioManager
 
     public AudioManager()
     {
-        OpenAI = new OpenAIClient(new ApiKeyCredential("test"), new OpenAIClientOptions()
-        {
+        OpenAI = new OpenAIClient(new ApiKeyCredential("test"), new OpenAIClientOptions() {
             Endpoint = new Uri("http://localhost:8080/v1/"),
         });
 
@@ -50,14 +49,14 @@ public class AudioManager
     {
         var path = OutputPath(filename);
         var text = await Whisper.TranscribeAudioAsync(path);
+        Console.WriteLine("[Whisper] " + text.Value.Text);
 
         return text;
     }
 
     public async Task TextToSpeech(string text, string filename)
     {
-        var options = new SpeechGenerationOptions()
-        {
+        var options = new SpeechGenerationOptions() {
             ResponseFormat = GeneratedSpeechFormat.Wav,
         };
 

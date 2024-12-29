@@ -142,6 +142,8 @@ public static class Program
             return;
         }
 
+        Console.WriteLine("[Ollama] " + answer.ToString());
+
         await _audioManager.TextToSpeech(answer.ToString(), "out.wav");
         _answer = answer.ToString();
 
