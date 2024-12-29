@@ -1,37 +1,33 @@
-﻿using System.Text;
+﻿using System;
+using System.ClientModel;
+using System.Text;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Layout;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using OllamaSharp;
+using OpenAI.Audio;
 
 namespace Dummy;
 
+public enum State
+{
+    Wait,
+    Record,
+    Generate,
+    Ready,
+    Speak,
+    Pause,
+}
+
 public static class Program
 {
-    private static Label _status = new Label()
-    {
-        FontSize = 32,
-        Padding = new Thickness(16),
-    };
-
-    private static TextBlock _answer = new TextBlock()
-    {
-        FontSize = 24,
-        TextWrapping = TextWrapping.Wrap,
-        Padding = new Thickness(16),
-    };
-
-    private static Image _image = new Image();
-
     private static AudioManager _audioManager = new AudioManager();
     private static OllamaApiClient _aiManager = AIManager.CreateOllama();
+    private static UIManager _uiManager = new UIManager();
 
-    private static string _state = "wait";
-    private static string _answerText = "";
+    private static State _state = State.Wait;
+    private static string _answer = "";
 
     public static void Main(string[] args)
     {
@@ -45,70 +41,64 @@ public static class Program
 
         var window = new Window();
         window.KeyUp += HandleKeyUp;
+        window.Content = _uiManager.Stack;
 
-        _image = new Image()
-        {
-            Stretch = Stretch.Uniform,
-            Width = 600,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            HorizontalAlignment = HorizontalAlignment.Left,
-        };
+        _uiManager.SetState(_state);
 
-        _image.SetValue(Canvas.BottomProperty, window.Height);
-
-        var stack = new StackPanel()
-        {
-            Width = window.Width,
-            Height = window.Height,
-            VerticalAlignment = VerticalAlignment.Stretch
-        };
-
-        stack.Children.Add(_status);
-        stack.Children.Add(_answer);
-        stack.Children.Add(_image);
-
-        window.Content = stack;
-
-        Wait();
         window.Show();
         app.Run(window);
     }
 
     private static async void HandleKeyUp(object? sender, KeyEventArgs e)
     {
-        if (_state == "wait")
+        if (_state == State.Speak && e.KeySymbol == "q")
         {
-            _state = "record";
-            _status.Content = "Слушает";
-            var bitmap = new Bitmap("Static/record.jpg");
-            _image.Source = bitmap;
-            Record();
-        }
-        else if (_state == "record")
-        {
-            _state = "generate";
-            _status.Content = "Думает...";
-            var bitmap = new Bitmap("Static/generate.jpg");
-            _image.Source = bitmap;
-            await Generate();
-        }
-        else if (_state == "ready")
-        {
-            _state = "speak";
-            _status.Content = "Говорит";
-            var bitmap = new Bitmap("Static/speak.jpg");
-            _image.Source = bitmap;
-            await Speak();
+            _state = State.Wait;
+            _uiManager.SetState(_state, "");
+            _audioManager.Player.Stop();
         }
 
-        else if (_state == "speak")
+        if (e.KeySymbol != " ")
         {
-            _state = "pause";
+            return;
+        }
+
+        if (_state == State.Wait)
+        {
+            _state = State.Record;
+            _uiManager.SetState(_state, "");
+            Record();
+        }
+
+        else if (_state == State.Record)
+        {
+            _state = State.Generate;
+            _uiManager.SetState(_state);
+            await Generate();
+        }
+
+        else if (_state == State.Ready)
+        {
+            _state = State.Speak;
+            _uiManager.SetState(_state, _answer);
+            await Speak();
+            await _audioManager.Player.Wait();
+
+            _state = State.Wait;
+            _uiManager.SetState(_state, "");
+        }
+
+        else if (_state == State.Speak)
+        {
+            _state = State.Pause;
+            _uiManager.SetState(_state);
             await Pause();
         }
-        else if (_state == "pause")
+
+        else if (_state == State.Pause)
         {
-            _state = "speak";
+            _state = State.Speak;
+            _uiManager.SetState(_state);
             await Speak();
         }
     }
@@ -122,26 +112,46 @@ public static class Program
     {
         _audioManager.Recorder.Stop();
 
-        var text = await _audioManager.SpeechToText("mic.wav");
+        ClientResult<AudioTranscription>? text = null;
+        try
+        {
+            text = await _audioManager.SpeechToText("mic.wav");
+        }
+        catch (Exception error)
+        {
+            _state = State.Wait;
+            _uiManager.SetState(_state, "Я тебя не расслышал");
+            Console.WriteLine(error);
+            return;
+        }
 
         var answer = new StringBuilder();
-        await foreach (var stream in _aiManager.GenerateAsync(text.Value.Text))
+
+        try
         {
-            answer.Append(stream?.Response);
+            await foreach (var stream in _aiManager.GenerateAsync(text.Value.Text))
+            {
+                answer.Append(stream?.Response);
+            }
+        }
+        catch (Exception error)
+        {
+            _state = State.Wait;
+            _uiManager.SetState(_state, "Произошла какая-то ошибка");
+            Console.WriteLine(error);
+            return;
         }
 
         await _audioManager.TextToSpeech(answer.ToString(), "out.wav");
-        _answerText = answer.ToString();
+        _answer = answer.ToString();
 
         Ready();
     }
 
     public static void Ready()
     {
-        _state = "ready";
-        _status.Content = "Готов!";
-        var bitmap = new Bitmap("Static/ready.jpg");
-        _image.Source = bitmap;
+        _state = State.Ready;
+        _uiManager.SetState(_state);
     }
 
     public static async Task Speak()
@@ -152,10 +162,8 @@ public static class Program
         }
         else
         {
-            _answer.Text = _answerText;
             _audioManager.PlayFile("out.wav");
             await _audioManager.Player.Wait();
-            Wait();
         }
     }
 
@@ -167,14 +175,5 @@ public static class Program
     public static void Stop()
     {
         _audioManager.Player.Stop();
-    }
-
-    private static void Wait()
-    {
-        _state = "wait";
-        _status.Content = "Ждет вопроса";
-        _answer.Text = "";
-        Bitmap bitmap = new Bitmap("Static/wait.jpg");
-        _image.Source = bitmap;
     }
 }
