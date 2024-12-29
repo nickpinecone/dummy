@@ -47,6 +47,14 @@ public static class Program
 
         window.Show();
         app.Run(window);
+
+        Dispose();
+    }
+
+    private static void Dispose()
+    {
+        _audioManager.Player.Stop();
+        _audioManager.Recorder.Stop();
     }
 
     private static async void HandleKeyUp(object? sender, KeyEventArgs e)
