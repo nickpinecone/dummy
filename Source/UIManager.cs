@@ -12,7 +12,7 @@ public class UIManager
     private Image _image;
 
     public TextBlock Answer { get; private set; }
-    public StackPanel Stack { get; private set; }
+    public DockPanel Stack { get; private set; }
 
     public UIManager()
     {
@@ -34,7 +34,11 @@ public class UIManager
             Padding = new Thickness(16),
         };
 
-        Stack = new StackPanel() { VerticalAlignment = VerticalAlignment.Stretch };
+        Stack = new DockPanel() { VerticalAlignment = VerticalAlignment.Stretch };
+
+        DockPanel.SetDock(_status, Dock.Top);
+        DockPanel.SetDock(Answer, Dock.Top);
+        DockPanel.SetDock(_image, Dock.Top);
 
         Stack.Children.Add(_status);
         Stack.Children.Add(Answer);
