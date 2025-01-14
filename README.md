@@ -1,2 +1,2 @@
 # Dummy
-Pretty stupid AI chatbot made for fun
+Pretty simple chat bot made for fun
